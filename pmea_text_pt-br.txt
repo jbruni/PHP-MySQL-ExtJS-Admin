@@ -1,0 +1,5 @@
+0 => Tabelas
+1 => Criar novo registro
+2 => Remover registros selecionados
+3 => Falha
+4 => O servidor não conseguiu obter uma resposta

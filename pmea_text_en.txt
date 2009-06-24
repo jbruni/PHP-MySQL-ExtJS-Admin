@@ -1,0 +1,5 @@
+0 => Tables
+1 => Add new record
+2 => Remove selected records
+3 => Failure
+4 => The server was not able to respond
