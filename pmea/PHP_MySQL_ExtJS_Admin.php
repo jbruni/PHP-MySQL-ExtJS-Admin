@@ -1,6 +1,5 @@
 <?php
 
-include( 'config.php' );
 require( 'pmea_classes.php' );
 
 class PHP_MySQL_ExtJS_Admin
@@ -17,33 +16,51 @@ class PHP_MySQL_ExtJS_Admin
     'debug' => false,
     // FEATURES
     'showtype' => false,  // show data type on headers
-    'language' => 'en'
+    'language' => 'en',   // default language is english
+    // TEMPLATES
+    'template_html'  => 'pmea_template.html',
+    'template_js'    => 'pmea_template.js',
+    // PATHS
+    'path_languages' => 'languages',
+    'path_templates' => 'templates'
   );
   
+  public $root;
   public $request;
   public $response;
   public $db;   // database
   public $text; // i18n
   
+  public $ds = DIRECTORY_SEPARATOR;
+  
   // initialization
   public function __construct( $config = array() )
   {
+    $this->root = dirname( __FILE__ );
+    $this->adjustConfigPaths();
     new pmeaApplyConfig( $config, $this );
     $this->request  = new pmeaRequest();
     $this->response = new pmeaResponse();
     $this->db       = new pmeaDatabase( $this->config['host'], $this->config['user'], $this->config['pass'], $this->config['name'] );
     $this->text     = new pmeaText();
-    $this->text->setSource( dirname(__FILE__). DIRECTORY_SEPARATOR . 'pmea_text_en.txt' );
+    $this->text->setSource( $this->config['path_languages'] . $this-> ds . 'pmea_text_en.txt' );
     if ( $this->config['language'] != 'en' )
-      $this->text->setLanguage( $this->config['language'], 'pmea_text_' . $this->config['language'] . '.txt' );
+      $this->text->setLanguage( $this->config['language'], $this->config['path_languages'] . $this-> ds .'pmea_text_' . $this->config['language'] . '.txt' );
+  }
+  
+  public function adjustConfigPaths()
+  {
+    foreach( $this->config as $key => $value )
+      if ( strpos( $key, 'path_' ) === 0 )
+        $this->config[$key] = $this->root . DIRECTORY_SEPARATOR . $value;
   }
   
   // render view
   public function getHTML()
   {
-    $view = new pmeaView( 'pmea_template.html' );
+    $view = new pmeaView( $this->config['path_templates'] . $this->ds . $this->config['template_html'] );
     $view->set( 'ext_root', $this->config['extRoot'] );
-    $view->set( 'pmea_js', 'pmea_template.js', true );
+    $view->set( 'pmea_js', $this->config['path_templates'] . $this->ds . $this->config['template_js'], true );
     $view->set( 'pmea_title', $this->config['title'] );
     $view->set( 'pmea_actions', $this->getPmeaActionsAPI() );
     $view->set( 'pageSize', $this->config['pageSize'] );

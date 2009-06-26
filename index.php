@@ -1,6 +1,8 @@
 <?php 
 
-include('php_MySQL_ExtJS_Admin.php'); 
+include( 'config.php' );
+
+require( 'pmea/PHP_MySQL_ExtJS_Admin.php' ); 
 
 // create the application
 $pmea = new PHP_MySQL_ExtJS_Admin( isset( $pmea_config ) ? $pmea_config : array() );
