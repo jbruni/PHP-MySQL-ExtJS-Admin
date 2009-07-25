@@ -36,8 +36,16 @@ $pmea_config = array(
   'showtype' => false,
   
   // language = language of user interface
-  'language' => 'en'
+  'language' => 'en',
   
+  // initial_table = table name to be automatically displayed on start up
+  'initial_table' => '',
+  
+  // allowed_tables = if you want to allow access only to a few tables, specify their names as an array
+  'allowed_tables'  => array(),
+  
+  // forbidden_tables = if you want to disallow access to a few tables, specify their names as an array
+  'forbidden_tables'=> array()
 );
 
 ?>

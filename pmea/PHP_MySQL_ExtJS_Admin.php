@@ -15,8 +15,11 @@ class PHP_MySQL_ExtJS_Admin
     'name'  => 'name',
     'debug' => false,
     // FEATURES
-    'showtype' => false,  // show data type on headers
-    'language' => 'en',   // default language is english
+    'showtype' => false,   // show data type on headers
+    'language' => 'en',    // default language is english
+    'initial_table'   => '', // automatically start on this table
+    'allowed_tables'  => array(), // only consider these tables
+    'forbidden_tables'=> array(), // do not consider these tables
     // TEMPLATES
     'template_html'  => 'pmea_template.html',
     'template_js'    => 'pmea_template.js',
@@ -65,7 +68,9 @@ class PHP_MySQL_ExtJS_Admin
     $view->set( 'pmea_actions', $this->getPmeaActionsAPI() );
     $view->set( 'pageSize', $this->config['pageSize'] );
     $view->set( 'debug', $this->config['debug'] ? '-debug' : '' );
-    $view->set( 'tables', $this->db->getTables() );
+    $view->set( 'language', $this->config['language'] );
+    $view->set( 'initial_table', $this->config['initial_table'] );
+    $view->set( 'tables', $this->db->getTables( $this->config['allowed_tables'], $this->config['forbidden_tables'] ) );
     $view->set( 'txt_tables', $this->text->get( 'Tables' ) );
     $view->set( 'txt_newrecord', $this->text->get( 'Add new record' ) );
     $view->set( 'txt_delrecord', $this->text->get( 'Remove selected records' ) );

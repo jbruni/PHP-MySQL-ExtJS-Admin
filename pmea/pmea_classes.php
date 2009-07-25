@@ -332,6 +332,17 @@ class pmeaActions extends pmeaFunction
     return call_user_func_array( array( $this, $this->method ), $this->parameters );
   }
   
+  protected function isAllowedTable( $table )
+  {
+    if ( !empty( $this->config['allowed_tables'] ) && !in_array( $table, $this->config['allowed_tables'] ) )
+      return false;
+    
+    if ( !empty( $this->config['forbidden_tables'] ) && in_array( $table, $this->config['forbidden_tables'] ) )
+      return false;
+    
+    return true;
+  }
+  
   protected function getExtType( $mysql_type )
   {
     foreach ( $this->dataTypes as $type => $regex )
@@ -351,8 +362,29 @@ class pmeaActions extends pmeaFunction
     return $type;
   }
   
+  protected function getExtFieldMaxLength( $mysql_type, $extjs_xtype = 'textfield' )
+  {
+    if ( preg_match( '/\(([0-9,]+)\)/', $mysql_type, $result ) == 0 )
+      return 1.7976931348623157e+308;  // Number.MAX_VALUE
+    
+    $maxlength = 0;
+    $nums = explode( ',', $result['1'] );
+    $max =  count( $nums );
+    for ( $count = 0; $count < $max; $count++ )
+      $maxlength += $count + $nums[$count];
+    
+    if ( ( $extjs_xtype = 'numberfield' ) && ( strpos( $mysql_type, 'unsigned' ) === false ) )
+      $maxlength += 1;
+    
+    return $maxlength;
+  }
+  
+  // TODO: refactor - split this method in several smaller ones
   public function getFields( $table, $grid )
   {
+    if ( !$this->isAllowedTable( $table ) )
+      throw new Exception( 'Table ' . $table . ' not allowed', E_USER_ERROR );
+    
     $fields = array();
     $fields[] = $this->getDummyField( $table );
     $columns = array();
@@ -380,8 +412,10 @@ class pmeaActions extends pmeaFunction
       if ( $column->editor->xtype == 'combo' )
       {
         preg_match_all( "/'(([^']|'')*)'/i", $result['Type'], $enum );
-        $column->editor->enum = $enum[1];
+        $column->editor->enums = $enum[1];
       }
+      if ( in_array( $column->editor->xtype, array( 'textfield', 'numberfield' ) ) )
+        $column->editor->maxLength = $this->getExtFieldMaxLength( $result['Type'], $column->editor->xtype );
       $columns[] = $column;
       // TODO: handle multiple primary keys
       if ( empty( $key ) && ( $result['Key'] == 'PRI' ) )
@@ -396,7 +430,7 @@ class pmeaActions extends pmeaFunction
     );
   }
   
-  public function getDummyField( $table )
+  protected function getDummyField( $table )
   {
     $field = new stdClass();
     $field->name = 'pmea_table';
@@ -407,6 +441,9 @@ class pmeaActions extends pmeaFunction
   
   public function getData( $table, $start, $limit, $sort, $dir )
   {
+    if ( !$this->isAllowedTable( $table ) )
+      throw new Exception( 'Table ' . $table . ' not allowed', E_USER_ERROR );
+    
     $page = ( $start / $limit ) + 1;
     $sql = new pmeaBuildSelect( '*', $table, '', $page, $limit, $sort, $dir );
     $sql = $sql->run();
@@ -434,9 +471,14 @@ class pmeaActions extends pmeaFunction
   public function setData( $key, $data )
   {
     $table = mysql_real_escape_string( $data->pmea_table );
+    
+    if ( !$this->isAllowedTable( $table ) )
+      throw new Exception( 'Table ' . $table . ' not allowed', E_USER_ERROR );
+    
     $key_field = $this->db->getKeyFromTable( $table );
     $where = mysql_real_escape_string( $key_field ) . ' = "' . mysql_real_escape_string( $key ) . '"';
     
+    $changes = array();
     $ignore = array( 'pmea_table', $key_field );
     foreach( $data as $field => $value )
       if ( !in_array( $field, $ignore ) )
@@ -509,7 +551,7 @@ class pmeaDatabase
     return mysql_query( $this->query, $this->connection );
   }
   
-  public function getTables()
+  public function getTables( $allow = array(), $forbid = array() )
   {
     $result = $this->runSQL( 'SHOW TABLES FROM ' . $this->name );
     if ( !$result )
@@ -517,7 +559,12 @@ class pmeaDatabase
     
     $this->tables = array();
     while( $table = mysql_fetch_row( $result ) )
-      $this->tables[] = $table[0];
+      if ( !empty( $allow ) && !in_array( $table[0], $allow ) )
+        continue;
+      elseif ( !empty( $forbid ) && in_array( $table[0], $forbid ) )
+        continue;
+      else
+        $this->tables[] = $table[0];
     
     $tables = array();
     foreach( $this->tables as $table )

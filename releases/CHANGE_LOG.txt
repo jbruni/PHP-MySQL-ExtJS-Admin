@@ -1,0 +1,13 @@
+20090725 (Ganesha 3)
+- maxLength is set for field editors
+- "initial_table" configuration added
+- "allowed_tables" configuration added
+- "forbidden_tables" configuration added
+- fixed IE javascript compatibility issue
+
+20090626 (Ganesha 2)
+- enum fields have Combo editors
+- folder structure
+
+20090624 (Ganesha)
+- first release

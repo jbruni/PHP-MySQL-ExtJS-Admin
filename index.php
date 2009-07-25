@@ -1,5 +1,8 @@
 <?php 
 
+// security: to prevent displaying of sensitive information
+error_reporting( 0 );
+
 include( 'config.php' );
 
 require( 'pmea/PHP_MySQL_ExtJS_Admin.php' ); 

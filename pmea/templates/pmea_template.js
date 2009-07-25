@@ -78,6 +78,8 @@ Ext.pmea.EditorGridPanel = Ext.extend( Ext.grid.EditorGridPanel, {
     };
     Ext.apply( this, Ext.apply( this.initialConfig, config ) );
     Ext.pmea.EditorGridPanel.superclass.initComponent.apply( this, arguments );
+    tablesCombo.setValue( '[%initial_table%]' );
+    this.selectTable( tablesCombo );
   },
   
   notyet: function() { Ext.pmea.Feedback( 'Not implemented yet',
@@ -87,6 +89,7 @@ Ext.pmea.EditorGridPanel = Ext.extend( Ext.grid.EditorGridPanel, {
   
   selectTable: function( tablesCombo ) {
     var table = tablesCombo.getValue();
+    if ( table == '' ) return;
     if ( !Ext.StoreMgr.containsKey( table ) )
       return pmeaActions.getFields( table, this.getId(), this.getStore );
     var store = Ext.StoreMgr.get( table );
@@ -158,7 +161,7 @@ Ext.pmea.EditorGridPanel = Ext.extend( Ext.grid.EditorGridPanel, {
       triggerAction: 'all',
       lazyRender:true,
       mode: 'local',
-      store: column.editor.enum
+      store: column.editor.enums
     });
     this.setEditor( index, combo );
     this.setRenderer( index, Ext.pmea.comboRenderer( combo ) );
